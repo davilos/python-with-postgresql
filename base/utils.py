@@ -13,7 +13,7 @@ PROMPT: Prompt = Prompt()
 CONF: Confirm = Confirm()
 
 
-def conectar() -> None:
+def connect() -> None:
     """
     Função para conectar ao servidor.
     """
@@ -53,7 +53,7 @@ def menu() -> None:
 
         [white b]Para listar o menu novamente digite "m" ou pressione [b]enter[/b].[/]
         """,
-        title='[b]Sistema de produtos[/b]'
+        title='[b]Sistema de produtos[/b]',
     )
     CONS.rule(title, align='center')
     CONS.print(options)
@@ -64,16 +64,16 @@ def menu() -> None:
 
             match option:
                 case '1':
-                    listar()
+                    listt()
                 case '2':
-                    inserir()
+                    insert()
                 case '3':
-                    atualizar()
+                    update()
                 case '4':
-                    deletar()
+                    delete()
                 case '5':
                     if CONF.ask('\nDeseja encerrar o sistema?', choices=['y', 'n'],):
-                        desconectar(CONEXAO)
+                        desconnect(CONEXAO)
                         CONS.print('Sistema finalizado!')
                         sys.exit()
                 case 'm' | '' | 'M':
@@ -84,7 +84,7 @@ def menu() -> None:
             CONS.print('[red b]\nOpção inválida, tente novamente![/]')
             
 
-def listar() -> None:
+def listt() -> None:
     """
     Função para listar os produtos.
     """
@@ -113,14 +113,14 @@ def listar() -> None:
         CONS.print('\n[red]Não existem produtos cadastrados![/]')
 
 
-def inserir() -> None:
+def insert() -> None:
     """
     Função para inserir produtos.
     """
     cursor: psycopg2.cursor = CONEXAO.cursor()
 
     try:
-        nome: str | ValueError = get_name(PROMPT.ask('Informe o [b]nome[/b] do produto'))
+        nome: str | ValueError = get_name(PROMPT.ask('\nInforme o [b]nome[/b] do produto'))
         preco: float |  ValueError = get_price(FloatPrompt.ask('Informe o [b]preço[/b] do produto'))
         estoque: int | ValueError = get_int(IntPrompt.ask('Informe a [b]quantidade[/b] em estoque'))
 
@@ -134,32 +134,96 @@ def inserir() -> None:
 
         if cursor.rowcount == 1:
             CONS.print(
-                f'\n[green b]O produto [b]{nome}[/b] foi inserido com sucesso![/]'
+                f'\n[white b]O produto [green b]{nome}[/] foi inserido com sucesso![/]'
             )
         else:
             CONS.print(f'\n[red]Não foi possível inserir o produto![/]')
         
-        CONF.ask(
+    conf = CONF.ask(
             '\nPressione [b]enter[/b] para continuar',
             show_choices=False,
             show_default=False,
             default='y',
         )
+    
+    if conf == 'y':
+        insert()
 
 
-def atualizar() -> None:
+def update() -> None:
     """
     Função para atualizar produtos.
     """
+    cursor: psycopg2.cursor = CONEXAO.cursor()
+
+    try:
+        codigo: int | ValueError = get_id(IntPrompt.ask('\nInforme o [b]id[/b] do produto'))
+        nome: str | ValueError = get_name(PROMPT.ask('Informe o [b]nome[/b] do produto'))
+        preco: float |  ValueError = get_price(FloatPrompt.ask('Informe o [b]preço[/b] do produto'))
+        estoque: int | ValueError = get_int(IntPrompt.ask('Informe a [b]quantidade[/b] em estoque'))
+
+        cursor.execute(f"UPDATE produtos SET nome='{nome}', preco={preco}, estoque={estoque} WHERE id={codigo}")
+    except ValueError:
+        CONS.print(
+            '\n[red]Erro ao atualizar produto, digite os valores corretos![/]'
+        )
+    else:
+        CONEXAO.commit()
+
+        if cursor.rowcount == 1:
+            CONS.print(
+                f'\n[white b]O produto [green b]{nome}[/] foi atualizado com sucesso![/]'
+            )
+        else:
+            CONS.print(f'\n[red]Não foi possível atualizar o produto. Veja se o id está correto![/]')
+
+    conf = CONF.ask(
+            '\nPressione [b]enter[/b] para continuar',
+            show_choices=False,
+            show_default=False,
+            default='y',
+        )
+    
+    if conf == 'y':
+        update()
 
 
-def deletar() -> None:
+def delete() -> None:
     """
     Função para deletar produtos.
     """
+    cursor: psycopg2.cursor = CONEXAO.cursor()
+
+    try:
+        codigo: int | ValueError = get_id(IntPrompt.ask('\nInforme o [b]id[/b] do produto'))
+
+        cursor.execute(f"DELETE FROM produtos WHERE id={codigo}")
+    except ValueError:
+        CONS.print(
+            '\n[red]Erro ao atualizar produto, digite os valores corretos![/]'
+        )
+    else:
+        CONEXAO.commit()
+
+        if cursor.rowcount == 1:
+            CONS.print(
+                f'\n[green b]O produto foi deletado com sucesso![/]'
+            )
+        else:
+            CONS.print(f'\n[red]Não foi possível deletar o produto. Veja se o id está correto![/]')
+    
+    conf = CONF.ask(
+            '\nPressione [b]enter[/b] para continuar',
+            show_choices=False,
+            show_default=False,
+            default='y',
+        )
+    
+    if conf == 'y':
+        delete()
 
 
-def desconectar(con) -> None:
+def desconnect(con) -> None:
     """
     Função para desconectar do servidor.
     """
@@ -188,7 +252,7 @@ def get_name(name: str) -> str | ValueError:
 
 def get_price(price: float) -> float | ValueError:
     """
-    Função para receber o preço do produto e caso ele seja maior que zero retorna ele mesmo, senão retorna um ValueError.
+    Função para receber o preço do produto que vai ser inserido ou atualizado. E, caso o preço seja maior que zero, vai retornar ele mesmo, senão retorna um ValueError.
     """
     if price > 0:
         return price
@@ -198,10 +262,21 @@ def get_price(price: float) -> float | ValueError:
 
 def get_int(int: int) -> int | ValueError:
     """
-    Função para receber o preço do produto e caso ele seja maior que zero retorna ele mesmo, senão retorna um ValueError.
+    Função para receber o estoque do produto que vai ser inserido ou atualizado. E, caso o estoque seja maior que zero, vai retornar ele mesmo, senão retorna um ValueError.
     """
 
     if int > 0:
         return int
+    
+    raise ValueError()
+
+
+def get_id(id: int) -> int | ValueError:
+    """
+    Função para receber o id do produto que vai ser atualizado ou deletado. E, caso o id seja maior que zero, vai retornar ele mesmo, senão retorna um ValueError.
+    """
+
+    if id > 0:
+        return id
     
     raise ValueError()
