@@ -1,12 +1,11 @@
 import sys
 
 import psycopg2
-from typing_extensions import Any
 from rich.console import Console
-from rich.prompt import Prompt, Confirm, FloatPrompt, IntPrompt
-from rich.table import Table
 from rich.panel import Panel
-
+from rich.prompt import Confirm, FloatPrompt, IntPrompt, Prompt
+from rich.table import Table
+from typing_extensions import Any
 
 CONS: Console = Console()
 PROMPT: Prompt = Prompt()
@@ -30,7 +29,9 @@ def connect() -> None:
             password=password,
         )
     except psycopg2.OperationalError as error:
-        CONS.print(f'\n[red b]Erro na conexão ao PostgreSQL Server:\n{error}[/]')
+        CONS.print(
+            f'\n[red b]Erro na conexão ao PostgreSQL Server:\n{error}[/]'
+        )
         sys.exit()
     else:
         menu()
@@ -72,7 +73,10 @@ def menu() -> None:
                 case '4':
                     delete()
                 case '5':
-                    if CONF.ask('\nDeseja encerrar o sistema?', choices=['y', 'n'],):
+                    if CONF.ask(
+                        '\nDeseja encerrar o sistema?',
+                        choices=['y', 'n'],
+                    ):
                         desconnect(CONEXAO)
                         CONS.print('Sistema finalizado!')
                         sys.exit()
@@ -82,7 +86,7 @@ def menu() -> None:
                     raise ValueError()
         except ValueError:
             CONS.print('[red b]\nOpção inválida, tente novamente![/]')
-            
+
 
 def listt() -> None:
     """
@@ -106,7 +110,7 @@ def listt() -> None:
                 str(produto[2]),
                 str(produto[3]),
             )
-        
+
         CONS.print()
         CONS.print(table)
     else:
@@ -120,11 +124,19 @@ def insert() -> None:
     cursor: psycopg2.cursor = CONEXAO.cursor()
 
     try:
-        nome: str | ValueError = get_name(PROMPT.ask('\nInforme o [b]nome[/b] do produto'))
-        preco: float |  ValueError = get_price(FloatPrompt.ask('Informe o [b]preço[/b] do produto'))
-        estoque: int | ValueError = get_int(IntPrompt.ask('Informe a [b]quantidade[/b] em estoque'))
+        nome: str | ValueError = get_name(
+            PROMPT.ask('\nInforme o [b]nome[/b] do produto')
+        )
+        preco: float | ValueError = get_price(
+            FloatPrompt.ask('Informe o [b]preço[/b] do produto')
+        )
+        estoque: int | ValueError = get_int(
+            IntPrompt.ask('Informe a [b]quantidade[/b] em estoque')
+        )
 
-        cursor.execute(f"INSERT INTO produtos (nome, preco, estoque) VALUES ('{nome}', {preco}, {estoque})")
+        cursor.execute(
+            f"INSERT INTO produtos (nome, preco, estoque) VALUES ('{nome}', {preco}, {estoque})"
+        )
     except ValueError:
         CONS.print(
             '\n[red]Erro ao inserir produto, digite os valores corretos![/]'
@@ -138,14 +150,14 @@ def insert() -> None:
             )
         else:
             CONS.print(f'\n[red]Não foi possível inserir o produto![/]')
-        
+
     conf = CONF.ask(
-            '\nPressione [b]enter[/b] para continuar',
-            show_choices=False,
-            show_default=False,
-            default='y',
-        )
-    
+        '\nPressione [b]enter[/b] para continuar',
+        show_choices=False,
+        show_default=False,
+        default='y',
+    )
+
     if conf == 'y':
         insert()
 
@@ -157,12 +169,22 @@ def update() -> None:
     cursor: psycopg2.cursor = CONEXAO.cursor()
 
     try:
-        codigo: int | ValueError = get_id(IntPrompt.ask('\nInforme o [b]id[/b] do produto'))
-        nome: str | ValueError = get_name(PROMPT.ask('Informe o [b]nome[/b] do produto'))
-        preco: float |  ValueError = get_price(FloatPrompt.ask('Informe o [b]preço[/b] do produto'))
-        estoque: int | ValueError = get_int(IntPrompt.ask('Informe a [b]quantidade[/b] em estoque'))
+        codigo: int | ValueError = get_id(
+            IntPrompt.ask('\nInforme o [b]id[/b] do produto')
+        )
+        nome: str | ValueError = get_name(
+            PROMPT.ask('Informe o [b]nome[/b] do produto')
+        )
+        preco: float | ValueError = get_price(
+            FloatPrompt.ask('Informe o [b]preço[/b] do produto')
+        )
+        estoque: int | ValueError = get_int(
+            IntPrompt.ask('Informe a [b]quantidade[/b] em estoque')
+        )
 
-        cursor.execute(f"UPDATE produtos SET nome='{nome}', preco={preco}, estoque={estoque} WHERE id={codigo}")
+        cursor.execute(
+            f"UPDATE produtos SET nome='{nome}', preco={preco}, estoque={estoque} WHERE id={codigo}"
+        )
     except ValueError:
         CONS.print(
             '\n[red]Erro ao atualizar produto, digite os valores corretos![/]'
@@ -175,15 +197,17 @@ def update() -> None:
                 f'\n[white b]O produto [green b]{nome}[/] foi atualizado com sucesso![/]'
             )
         else:
-            CONS.print(f'\n[red]Não foi possível atualizar o produto. Veja se o id está correto![/]')
+            CONS.print(
+                f'\n[red]Não foi possível atualizar o produto. Veja se o id está correto![/]'
+            )
 
     conf = CONF.ask(
-            '\nPressione [b]enter[/b] para continuar',
-            show_choices=False,
-            show_default=False,
-            default='y',
-        )
-    
+        '\nPressione [b]enter[/b] para continuar',
+        show_choices=False,
+        show_default=False,
+        default='y',
+    )
+
     if conf == 'y':
         update()
 
@@ -195,9 +219,11 @@ def delete() -> None:
     cursor: psycopg2.cursor = CONEXAO.cursor()
 
     try:
-        codigo: int | ValueError = get_id(IntPrompt.ask('\nInforme o [b]id[/b] do produto'))
+        codigo: int | ValueError = get_id(
+            IntPrompt.ask('\nInforme o [b]id[/b] do produto')
+        )
 
-        cursor.execute(f"DELETE FROM produtos WHERE id={codigo}")
+        cursor.execute(f'DELETE FROM produtos WHERE id={codigo}')
     except ValueError:
         CONS.print(
             '\n[red]Erro ao atualizar produto, digite os valores corretos![/]'
@@ -206,19 +232,19 @@ def delete() -> None:
         CONEXAO.commit()
 
         if cursor.rowcount == 1:
-            CONS.print(
-                f'\n[green b]O produto foi deletado com sucesso![/]'
-            )
+            CONS.print(f'\n[green b]O produto foi deletado com sucesso![/]')
         else:
-            CONS.print(f'\n[red]Não foi possível deletar o produto. Veja se o id está correto![/]')
-    
+            CONS.print(
+                f'\n[red]Não foi possível deletar o produto. Veja se o id está correto![/]'
+            )
+
     conf = CONF.ask(
-            '\nPressione [b]enter[/b] para continuar',
-            show_choices=False,
-            show_default=False,
-            default='y',
-        )
-    
+        '\nPressione [b]enter[/b] para continuar',
+        show_choices=False,
+        show_default=False,
+        default='y',
+    )
+
     if conf == 'y':
         delete()
 
@@ -246,7 +272,7 @@ def get_name(name: str) -> str | ValueError:
     """
     if len(name) > 0:
         return name.title().strip()
-    
+
     raise ValueError()
 
 
@@ -256,7 +282,7 @@ def get_price(price: float) -> float | ValueError:
     """
     if price > 0:
         return price
-    
+
     raise ValueError()
 
 
@@ -267,7 +293,7 @@ def get_int(int: int) -> int | ValueError:
 
     if int > 0:
         return int
-    
+
     raise ValueError()
 
 
@@ -278,5 +304,5 @@ def get_id(id: int) -> int | ValueError:
 
     if id > 0:
         return id
-    
+
     raise ValueError()
