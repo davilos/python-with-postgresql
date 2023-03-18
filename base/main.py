@@ -1,4 +1,9 @@
-from utils import conectar
+from utils import connect, CONS
+from time import sleep
 
 if __name__ == '__main__':
-    conectar()
+
+    with CONS.status("Ligando o sistema...", spinner='monkey'):
+        sleep(2)
+
+    connect()
